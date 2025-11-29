@@ -21,23 +21,13 @@ const MotionBottom = motion.create('div');
 const IN_DEVELOPMENT = process.env.NODE_ENV !== 'production';
 const BOTTOM_VIEW_MOTION_PROPS = {
   variants: {
-    visible: {
-      opacity: 1,
-      translateY: '0%',
-    },
-    hidden: {
-      opacity: 0,
-      translateY: '100%',
-    },
+    visible: { opacity: 1, translateY: '0%' },
+    hidden: { opacity: 0, translateY: '100%' },
   },
   initial: 'hidden',
   animate: 'visible',
   exit: 'hidden',
-  transition: {
-    duration: 0.3,
-    delay: 0.5,
-    ease: 'easeOut',
-  },
+  transition: { duration: 0.3, delay: 0.5, ease: 'easeOut' },
 };
 
 interface FadeProps {
@@ -50,14 +40,15 @@ export function Fade({ top = false, bottom = false, className }: FadeProps) {
   return (
     <div
       className={cn(
-        'from-background pointer-events-none h-4 bg-linear-to-b to-transparent',
-        top && 'bg-linear-to-b',
-        bottom && 'bg-linear-to-t',
-        className
+        'pointer-events-none h-4',
+        top && 'bg-gradient-to-b from-black/80 to-transparent',
+        bottom && 'bg-gradient-to-t from-black/80 to-transparent',
+        className,
       )}
     />
   );
 }
+
 interface SessionViewProps {
   appConfig: AppConfig;
 }
@@ -81,6 +72,7 @@ export const SessionView = ({
     screenShare: appConfig.supportsVideoInput,
   };
 
+  // auto-scroll on local messages
   useEffect(() => {
     const lastMessage = messages.at(-1);
     const lastMessageIsLocal = lastMessage?.from?.isLocal === true;
@@ -91,38 +83,96 @@ export const SessionView = ({
   }, [messages]);
 
   return (
-    <section className="bg-background relative z-10 h-full w-full overflow-hidden" {...props}>
-      {/* Chat Transcript */}
+    <section
+      className="
+        relative z-10 h-full w-full overflow-hidden
+        bg-[url('/dark_forest_bg.png')] bg-cover bg-center
+        text-red-100
+      "
+      {...props}
+    >
+      {/* FOG OVERLAY */}
+      <div
+        className="
+          absolute inset-0 
+          bg-[url('/fog_overlay.png')]
+          opacity-35 
+          mix-blend-screen
+          animate-pulse 
+          pointer-events-none
+          z-0
+        "
+      ></div>
+
+      {/* CHAT TRANSCRIPT */}
       <div
         className={cn(
-          'fixed inset-0 grid grid-cols-1 grid-rows-1',
-          !chatOpen && 'pointer-events-none'
+          'fixed inset-0 grid grid-cols-1 grid-rows-1 transition-all',
+          !chatOpen && 'pointer-events-none opacity-0',
+          chatOpen && 'opacity-100',
         )}
       >
         <Fade top className="absolute inset-x-4 top-0 h-40" />
-        <ScrollArea ref={scrollAreaRef} className="px-4 pt-40 pb-[150px] md:px-6 md:pb-[180px]">
+
+        <ScrollArea
+          ref={scrollAreaRef}
+          className="
+            px-4 pt-40 pb-[150px]
+            md:px-6 md:pb-[180px]
+            relative z-10
+          "
+        >
           <ChatTranscript
             hidden={!chatOpen}
             messages={messages}
-            className="mx-auto max-w-2xl space-y-3 transition-opacity duration-300 ease-out"
+            className="
+              mx-auto max-w-2xl space-y-3 
+              transition-opacity duration-300 ease-out
+              text-red-100
+              drop-shadow-[0_0_8px_rgba(255,0,0,0.4)]
+            "
           />
         </ScrollArea>
       </div>
 
-      {/* Tile Layout */}
+      {/* TILE LAYOUT (camera, avatar, waveform, etc.) */}
       <TileLayout chatOpen={chatOpen} />
 
-      {/* Bottom */}
+      {/* BOTTOM CONTROL BAR */}
       <MotionBottom
         {...BOTTOM_VIEW_MOTION_PROPS}
-        className="fixed inset-x-3 bottom-0 z-50 md:inset-x-12"
+        className="
+          fixed inset-x-3 bottom-0 z-50 md:inset-x-12
+        "
       >
         {appConfig.isPreConnectBufferEnabled && (
-          <PreConnectMessage messages={messages} className="pb-4" />
+          <PreConnectMessage
+            messages={messages}
+            className="
+              pb-4 text-red-200 drop-shadow-[0_0_10px_rgba(255,0,0,0.5)]
+            "
+          />
         )}
-        <div className="bg-background relative mx-auto max-w-2xl pb-3 md:pb-12">
+
+        <div
+          className="
+            relative mx-auto max-w-2xl pb-3 md:pb-12
+            bg-black/50 backdrop-blur-xl
+            border border-red-900/40
+            rounded-2xl
+            shadow-[0_0_20px_rgba(255,0,0,0.35)]
+          "
+        >
           <Fade bottom className="absolute inset-x-0 top-0 h-4 -translate-y-full" />
-          <AgentControlBar controls={controls} onChatOpenChange={setChatOpen} />
+
+          <AgentControlBar
+            controls={controls}
+            onChatOpenChange={setChatOpen}
+            className="
+              text-red-200
+              [&_*]:!text-red-200
+            "
+          />
         </div>
       </MotionBottom>
     </section>
